@@ -23,11 +23,15 @@ export const setInterfaceModeHandler = (
         },
         filePath: option.filePath,
         password: option.password,
+        proxyId: option.proxyId,
+        proxyPassword: option.proxyPassword,
       };
     } else if (option?.filePath) {
       return {
         filePath: option.filePath,
         password: option.password,
+        proxyId: option.proxyId,
+        proxyPassword: option.proxyPassword,
       };
     }
 
@@ -60,6 +64,23 @@ export const checkCLI = (): CLIOption | undefined => {
     filePath = process.argv[fileIndex + 1];
   }
 
+  // automation proxyID
+  let proxyId: string | undefined;
+  const proxyIdIndex = process.argv.indexOf(`-proxyId`);
+  if (proxyIdIndex != -1 && proxyIdIndex + 1 <= process.argv.length) {
+    proxyId = process.argv[proxyIdIndex + 1];
+  }
+
+  // automation proxy password
+  let proxyPassword: string | undefined;
+  const proxyPasswordIndex = process.argv.indexOf(`-proxyPwd`);
+  if (
+    proxyPasswordIndex != -1 &&
+    proxyPasswordIndex + 1 <= process.argv.length
+  ) {
+    proxyPassword = process.argv[proxyPasswordIndex + 1];
+  }
+
   if (process.argv.indexOf(`-host`) != -1) {
     // audio
     let audio = false;
@@ -76,6 +97,8 @@ export const checkCLI = (): CLIOption | undefined => {
         },
         filePath,
         password,
+        proxyId,
+        proxyPassword,
       };
       return option;
     } else {
@@ -88,6 +111,8 @@ export const checkCLI = (): CLIOption | undefined => {
     const option: CLIOption = {
       filePath,
       password,
+      proxyId,
+      proxyPassword,
     };
     return option;
   }
