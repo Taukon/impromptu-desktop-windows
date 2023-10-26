@@ -2,6 +2,7 @@ import { Socket, io } from "socket.io-client";
 import { initShareFile, initShareHostApp, setAuth } from "./desktop";
 import { signalingAddress } from "./config";
 import { CLICheck } from "../util/type";
+import { reqAutoProxy } from "./desktop/signaling";
 
 let mode = true;
 
@@ -14,6 +15,21 @@ const desktopOption: HTMLDivElement = <HTMLDivElement>(
 const screen = document.getElementById("screen");
 
 const signalingConnect = () => {
+  // automation proxy
+  const proxyIdForm = document.createElement("p");
+  signalingInfo.appendChild(proxyIdForm);
+  proxyIdForm.appendChild(document.createTextNode(" ProxyID: "));
+  const inputProxyId = document.createElement("input");
+  inputProxyId.value = "";
+  proxyIdForm.appendChild(inputProxyId);
+
+  const proxyPwdForm = document.createElement("p");
+  signalingInfo.appendChild(proxyPwdForm);
+  proxyPwdForm.appendChild(document.createTextNode(" Proxy Password: "));
+  const inputProxyPwd = document.createElement("input");
+  inputProxyPwd.value = "impromptu";
+  proxyPwdForm.appendChild(inputProxyPwd);
+
   // password
   const pwdForm = document.createElement("p");
   signalingInfo.appendChild(pwdForm);
@@ -35,53 +51,79 @@ const signalingConnect = () => {
     });
     //
 
-    socket.once("desktopId", async (msg) => {
-      if (typeof msg === "string") {
-        const desktopId = msg;
-        setAuth(msg, socket, inputPwd.value);
+    socket.once(
+      "desktopId",
+      async (desktopId?: string, rtcConfiguration?: RTCConfiguration) => {
+        if (typeof desktopId === "string" && rtcConfiguration) {
+          setAuth(desktopId, socket, inputPwd.value);
 
-        // show desktopId
-        const idInfo = document.createElement("p");
-        signalingInfo.appendChild(idInfo);
-        idInfo.textContent = `Desktop ID: ${msg}`;
+          if (
+            inputPwd.value.length > 0 &&
+            inputProxyId.value.length > 0 &&
+            inputProxyPwd.value.length > 0
+          ) {
+            reqAutoProxy(
+              socket,
+              inputProxyId.value,
+              inputProxyPwd.value,
+              desktopId,
+              inputPwd.value,
+            );
+          }
 
-        // fileShare
-        setFileShare(desktopOption, desktopId, socket);
+          // show desktopId
+          const idInfo = document.createElement("p");
+          signalingInfo.appendChild(idInfo);
+          idInfo.textContent = `Desktop ID: ${desktopId}`;
 
-        // screen mode
-        const modeForm = document.createElement("p");
-        desktopOption.append(modeForm);
-        const screenMode = document.createElement("button");
-        modeForm.appendChild(screenMode);
-        screenMode.textContent = "Screen Mode";
+          // fileShare
+          setFileShare(desktopOption, desktopId, socket, rtcConfiguration);
 
-        screenMode.onclick = async () => {
-          mode = !mode;
+          // screen mode
+          const modeForm = document.createElement("p");
+          desktopOption.append(modeForm);
+          const screenMode = document.createElement("button");
+          modeForm.appendChild(screenMode);
+          screenMode.textContent = "Screen Mode";
+
+          screenMode.onclick = async () => {
+            mode = !mode;
+            if (mode) {
+              screenMode.disabled = true;
+              await userMediaMode(
+                desktopOption,
+                screenMode,
+                desktopId,
+                socket,
+                rtcConfiguration,
+              );
+              screenMode.disabled = false;
+            } else {
+              screenMode.disabled = true;
+              // xvfbMode(desktopOption, screenMode, desktopId, socket);
+              screenMode.disabled = false;
+            }
+          };
+
           if (mode) {
             screenMode.disabled = true;
-            await userMediaMode(desktopOption, screenMode, desktopId, socket);
-            screenMode.disabled = false;
+            userMediaMode(
+              desktopOption,
+              screenMode,
+              desktopId,
+              socket,
+              rtcConfiguration,
+            ).then(() => {
+              screenMode.disabled = false;
+            });
           } else {
             screenMode.disabled = true;
             // xvfbMode(desktopOption, screenMode, desktopId, socket);
             screenMode.disabled = false;
           }
-        };
-
-        if (mode) {
-          screenMode.disabled = true;
-          userMediaMode(desktopOption, screenMode, desktopId, socket).then(
-            () => {
-              screenMode.disabled = false;
-            },
-          );
-        } else {
-          screenMode.disabled = true;
-          // xvfbMode(desktopOption, screenMode, desktopId, socket);
-          screenMode.disabled = false;
         }
-      }
-    });
+      },
+    );
   };
 };
 
@@ -90,6 +132,7 @@ const userMediaMode = async (
   screenMode: HTMLButtonElement,
   desktopId: string,
   socket: Socket,
+  rtcConfiguration: RTCConfiguration,
 ) => {
   (<HTMLDivElement>document.getElementById("userMediaOption"))?.remove();
   (<HTMLDivElement>document.getElementById("xvfbOption"))?.remove();
@@ -134,6 +177,7 @@ const userMediaMode = async (
         await startUserMedia(
           desktopId,
           socket,
+          rtcConfiguration,
           item.id,
           true,
           audio.checked,
@@ -160,6 +204,7 @@ const userMediaMode = async (
         await startUserMedia(
           desktopId,
           socket,
+          rtcConfiguration,
           item.id,
           false,
           audio.checked,
@@ -179,50 +224,51 @@ const userMediaMode = async (
 };
 
 const startUserMedia = async (
-  desktopId: string | undefined,
-  socket: Socket | undefined,
+  desktopId: string,
+  socket: Socket,
+  rtcConfiguration: RTCConfiguration,
   sourceId: string,
   isDisplay: boolean,
   audio: boolean,
   useScreenChannel: boolean,
   onControlDisplay: boolean,
 ): Promise<boolean> => {
-  if (desktopId && socket) {
-    try {
-      const shareHostApp = await initShareHostApp(
-        desktopId,
-        socket,
-        sourceId,
-        isDisplay,
-        useScreenChannel,
-        onControlDisplay,
-        audio,
-      );
-      if (onControlDisplay && shareHostApp) {
-        screen?.appendChild(shareHostApp.screen);
-      }
-      return shareHostApp ? true : false;
-    } catch (error) {
-      if (audio) {
-        console.log(`maybe not support audio...`);
-        try {
-          const shareHostApp = await initShareHostApp(
-            desktopId,
-            socket,
-            sourceId,
-            isDisplay,
-            useScreenChannel,
-            onControlDisplay,
-            false,
-          );
-          if (onControlDisplay && shareHostApp) {
-            screen?.appendChild(shareHostApp.screen);
-          }
-          return shareHostApp ? true : false;
-        } catch (error) {
-          console.log("error. orz");
-          console.log(error);
+  try {
+    const shareHostApp = await initShareHostApp(
+      desktopId,
+      socket,
+      rtcConfiguration,
+      sourceId,
+      isDisplay,
+      useScreenChannel,
+      onControlDisplay,
+      audio,
+    );
+    if (onControlDisplay && shareHostApp) {
+      screen?.appendChild(shareHostApp.screen);
+    }
+    return shareHostApp ? true : false;
+  } catch (error) {
+    if (audio) {
+      console.log(`maybe not support audio...`);
+      try {
+        const shareHostApp = await initShareHostApp(
+          desktopId,
+          socket,
+          rtcConfiguration,
+          sourceId,
+          isDisplay,
+          useScreenChannel,
+          onControlDisplay,
+          false,
+        );
+        if (onControlDisplay && shareHostApp) {
+          screen?.appendChild(shareHostApp.screen);
         }
+        return shareHostApp ? true : false;
+      } catch (error) {
+        console.log("error. orz");
+        console.log(error);
       }
     }
   }
@@ -233,6 +279,7 @@ const setFileShare = (
   parentNode: HTMLDivElement,
   desktopId: string,
   socket: Socket,
+  rtcConfiguration: RTCConfiguration,
 ) => {
   const form = document.createElement("p");
   form.id = "fileOption";
@@ -252,7 +299,7 @@ const setFileShare = (
     fileButton.textContent = "fileShare";
     fileOption.appendChild(fileButton);
     fileButton.onclick = async () => {
-      const shareFile = initShareFile(desktopId, socket);
+      const shareFile = initShareFile(desktopId, socket, rtcConfiguration);
       const dirPath = inputDirPath.value;
       if (dirPath === "") {
         return;
@@ -276,42 +323,56 @@ const startCLI = async (check: CLICheck) => {
     rejectUnauthorized: false,
   });
 
-  socket.once("desktopId", async (msg) => {
-    if (typeof msg === "string" && check.password) {
-      const desktopId = msg;
-      setAuth(msg, socket, check.password);
-      window.util.sendMessage(`desktopId: ${desktopId}`);
+  socket.once(
+    "desktopId",
+    async (desktopId?: string, rtcConfiguration?: RTCConfiguration) => {
+      if (typeof desktopId === "string" && check.password && rtcConfiguration) {
+        setAuth(desktopId, socket, check.password);
+        window.util.sendMessage(`desktopId: ${desktopId}`);
 
-      if (check.host) {
-        initShareHostApp(
-          desktopId,
-          socket,
-          check.host.sourceId,
-          true,
-          false,
-          false,
-          check.host.audio,
-        ).catch(() => {
-          if (check.host?.audio) {
-            initShareHostApp(
-              desktopId,
-              socket,
-              check.host.sourceId,
-              true,
-              false,
-              false,
-              false,
-            );
-          }
-        });
-      }
+        if (check.proxyId && check.proxyPassword) {
+          reqAutoProxy(
+            socket,
+            check.proxyId,
+            check.proxyPassword,
+            desktopId,
+            check.password,
+          );
+        }
 
-      if (check.filePath) {
-        const shareFile = initShareFile(desktopId, socket);
-        shareFile.loadFile(check.filePath);
+        if (check.host) {
+          initShareHostApp(
+            desktopId,
+            socket,
+            rtcConfiguration,
+            check.host.sourceId,
+            true,
+            false,
+            false,
+            check.host.audio,
+          ).catch(() => {
+            if (check.host?.audio) {
+              initShareHostApp(
+                desktopId,
+                socket,
+                rtcConfiguration,
+                check.host.sourceId,
+                true,
+                false,
+                false,
+                false,
+              );
+            }
+          });
+        }
+
+        if (check.filePath) {
+          const shareFile = initShareFile(desktopId, socket, rtcConfiguration);
+          shareFile.loadFile(check.filePath);
+        }
       }
-    }
-  });
+    },
+  );
 };
 
 const start = async () => {

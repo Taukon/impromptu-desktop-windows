@@ -7,6 +7,8 @@ export type CLIOption = {
   };
   filePath?: string;
   password: string;
+  proxyId?: string;
+  proxyPassword?: string;
 };
 
 export type CLICheck = {
@@ -16,6 +18,8 @@ export type CLICheck = {
   };
   filePath?: string;
   password?: string;
+  proxyId?: string;
+  proxyPassword?: string;
 };
 
 export type DisplayInfo = { name: string; id: string };

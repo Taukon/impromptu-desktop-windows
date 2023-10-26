@@ -14,6 +14,7 @@ export const setAuth = (
 export const initShareHostApp = async (
   desktopId: string,
   socket: Socket,
+  rtcConfiguration: RTCConfiguration,
   sourceId: string,
   isDesktop: boolean,
   useScreenChannel: boolean,
@@ -47,6 +48,7 @@ export const initShareHostApp = async (
       isDesktop,
       desktopId,
       socket,
+      rtcConfiguration,
       stream,
       useScreenChannel,
       onControlDisplay,
@@ -57,6 +59,10 @@ export const initShareHostApp = async (
   return undefined;
 };
 
-export const initShareFile = (desktopId: string, socket: Socket): ShareFile => {
-  return new ShareFile(desktopId, socket);
+export const initShareFile = (
+  desktopId: string,
+  socket: Socket,
+  rtcConfiguration: RTCConfiguration,
+): ShareFile => {
+  return new ShareFile(desktopId, socket, rtcConfiguration);
 };

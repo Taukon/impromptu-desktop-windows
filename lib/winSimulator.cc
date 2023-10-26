@@ -29,8 +29,8 @@ Napi::Value motionEvent(const Napi::CallbackInfo &info)
 
     int px = x * (hinfo.rcMonitor.right - hinfo.rcMonitor.left) / wWidth;
     int py = y * (hinfo.rcMonitor.bottom - hinfo.rcMonitor.top) / wHeight;
-    printf("x: %d, y: %d vw: %d, vh: %d, sw: %d, sh: %d  ", x, y, wWidth, wHeight, hinfo.rcMonitor.right - hinfo.rcMonitor.left, hinfo.rcMonitor.bottom - hinfo.rcMonitor.top);
-    printf("current x: %d, y: %d\n", px, py);
+    // printf("x: %d, y: %d vw: %d, vh: %d, sw: %d, sh: %d  ", x, y, wWidth, wHeight, hinfo.rcMonitor.right - hinfo.rcMonitor.left, hinfo.rcMonitor.bottom - hinfo.rcMonitor.top);
+    // printf("current x: %d, y: %d\n", px, py);
     SetCursorPos(px, py);
 
     return env.Null();
@@ -212,4 +212,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   return exports;
 }
 
-NODE_API_MODULE(hello, Init);
+NODE_API_MODULE(winSimulator, Init);
