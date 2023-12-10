@@ -1,9 +1,34 @@
-import { desktopCapturer, ipcMain } from "electron";
+import { BrowserWindow, desktopCapturer, ipcMain } from "electron";
 import { ControlData, DisplayInfo, KeyJson } from "../../../util/type";
 import { winSimulator } from "./win32/win32lib";
 import { keySymToWin32Key } from "./win32/convertKey";
 
-export const setShareAppIpcHandler = (): void => {
+export const setShareAppIpcHandler = (mainWindow: BrowserWindow): void => {
+  let screenTimer: NodeJS.Timeout | undefined = undefined;
+  ipcMain.handle(
+    "requestScreenFrame",
+    async (event: Electron.IpcMainInvokeEvent, ms: number) => {
+      if (screenTimer) {
+        clearInterval(screenTimer);
+      }
+
+      screenTimer = setInterval(() => {
+        try {
+          if (mainWindow.isDestroyed()) {
+            clearInterval(screenTimer);
+            screenTimer = undefined;
+          } else {
+            mainWindow.webContents.send("sendScreenFrame");
+          }
+        } catch (error) {
+          console.log(error);
+          clearInterval(screenTimer);
+          screenTimer = undefined;
+        }
+      }, ms);
+    },
+  );
+
   ipcMain.handle(
     "getDisplayInfo",
     async (event: Electron.IpcMainInvokeEvent, isDisplay: boolean) => {
