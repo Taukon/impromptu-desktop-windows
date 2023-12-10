@@ -12,7 +12,6 @@ import {
   parseAppProtocol,
   sendAppProtocol,
 } from "../../../protocol/renderer";
-import { timer } from "../../../util";
 import { appStatus } from "../../../protocol/common";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -24,8 +23,6 @@ export class ShareHostApp {
   public socket: Socket;
 
   private windowId: number;
-  private preJpegBuffer = Buffer.alloc(0);
-
   private canvas = document.createElement("canvas");
   private video = document.createElement("video");
   public screen: HTMLCanvasElement | HTMLVideoElement;
@@ -345,7 +342,7 @@ export class ShareHostApp {
   }
 
   private startChannelScreen(): void {
-    const loop = async () => {
+    window.shareApp.sendScreenFrame(() => {
       try {
         if (
           !(
@@ -375,12 +372,11 @@ export class ShareHostApp {
           this.videoEncoder.encode(videoFrame);
         }
         videoFrame.close();
-      } catch (err) {
-        console.log(err);
+      } catch (error) {
+        console.log(error);
       }
-      await timer(this.interval);
-      requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
+    });
+
+    window.shareApp.requestScreenFrame(this.interval);
   }
 }

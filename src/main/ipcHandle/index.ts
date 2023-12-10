@@ -10,7 +10,7 @@ export const initIpcHandler = (
 ): void => {
   setInterfaceModeHandler(mainWindow, cli);
 
-  setShareAppIpcHandler();
+  setShareAppIpcHandler(mainWindow);
   setShareFileIpcHandler(mainWindow);
 
   ipcMain.handle("getBasePath", () => {
