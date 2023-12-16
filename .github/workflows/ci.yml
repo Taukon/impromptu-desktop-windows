@@ -37,9 +37,6 @@ jobs:
           pip install setuptools
           npm install -D
 
-      - name: Run prettier
-        run: npm run lint:ci:prettier
-
       - name: Run lint
         run: npm run lint:ci
 

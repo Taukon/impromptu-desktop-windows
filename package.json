@@ -12,8 +12,7 @@
     "start": "electron .",
     "start2": "electron . --disable-gpu",
     "lint": "eslint --fix --ext .ts src && prettier --write .\\src\\**\\*.ts",
-    "lint:ci": "eslint --fix --ext .ts src",
-    "lint:ci:prettier": "prettier --check .\\src\\**\\*.ts",
+    "lint:ci": "eslint --fix --ext .ts src && prettier --check .\\src\\**\\*.ts",
     "pack": "webpack --mode production --progress && node build.js"
   },
   "keywords": [],
