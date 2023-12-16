@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: windows-latest
+
+    steps:
+      - name: Set git to use LF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: Set up msbuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        run: |
+          pip install setuptools
+          npm install -D
+
+      - name: Run lint
+        run: npm run lint:ci
+
