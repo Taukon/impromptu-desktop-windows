@@ -20,7 +20,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v3
-        run: pip install setuptools
 
       - name: Set up msbuild
         uses: microsoft/setup-msbuild@v1.1
@@ -30,5 +29,6 @@ jobs:
 
       - name: Run lint
         run: |
+          pip install setuptools
           npm install --only=dev
           npm run lint:ci
