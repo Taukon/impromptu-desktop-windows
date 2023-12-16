@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: Set up msbuild
+        uses: microsoft/setup-msbuild
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+
+      - name: Run lint
+        run: |
+          npm install --only=dev
+          npm run lint:ci
