@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { FileShare } from './components/fileShare';
-import { HostScreen } from './components/hostScreen';
+import { FileShare } from './components/FileShare';
+import { HostScreen } from './components/HostScreen';
 import { impromptu } from '.';
 
 const RootDiv = () => {
@@ -56,7 +56,7 @@ const DesktopOption = () => {
 
     return (
         <>
-            <p>Desktop ID: {impromptu.desktopId}</p>
+            <p>Desktop ID: {impromptu.desktopId} <button onClick={() => {if(impromptu.desktopId){navigator.clipboard.writeText(impromptu.desktopId)}}}>copy</button></p>
             <FileShare />
             <HostScreen setLock={setLock} />
         </>
