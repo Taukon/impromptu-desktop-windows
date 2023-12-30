@@ -18,6 +18,7 @@ export type CLICheck = {
   };
   filePath?: string;
   password?: string;
+  hostOnly?: boolean;
   proxyId?: string;
   proxyPassword?: string;
 };
