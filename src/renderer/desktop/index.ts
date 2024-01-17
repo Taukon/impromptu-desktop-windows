@@ -14,7 +14,7 @@ const initShareHostApp = async (
   rtcConfiguration: RTCConfiguration,
   sourceId: string,
   isDesktop: boolean,
-  useScreenChannel: boolean,
+  webCodecs: boolean,
   onControlDisplay: boolean,
   audio: boolean,
 ): Promise<ShareHostApp | undefined> => {
@@ -47,7 +47,7 @@ const initShareHostApp = async (
       socket,
       rtcConfiguration,
       stream,
-      useScreenChannel,
+      webCodecs,
       onControlDisplay,
     );
 
@@ -107,6 +107,7 @@ export class Impromptu {
     sourceId: string,
     audio: boolean,
     onControlDisplay: boolean,
+    webCodecs: boolean,
     isDisplay: boolean,
     parent?: HTMLDivElement,
   ): Promise<boolean> {
@@ -123,7 +124,7 @@ export class Impromptu {
           this.rtcConfiguration,
           sourceId,
           isDisplay,
-          true,
+          webCodecs,
           onControlDisplay,
           audio,
         );
@@ -141,7 +142,7 @@ export class Impromptu {
               this.rtcConfiguration,
               sourceId,
               isDisplay,
-              true,
+              webCodecs,
               onControlDisplay,
               false,
             );
