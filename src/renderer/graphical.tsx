@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { FileShare } from './components/FileShare';
-import { HostScreen } from './components/HostScreen';
+import { FileShare } from './components/fileShare';
+import { HostScreen } from './components/hostScreen';
 import { impromptu } from '.';
+import "./index.css";
 
 const RootDiv = () => {
     const proxyIdRef = useRef<HTMLInputElement>(null);
@@ -30,12 +31,13 @@ const RootDiv = () => {
 
     return (
         <>
-            <div id="signalingInfo">
-                <p>ProxyID: <input ref={proxyIdRef} /></p>
-                <p>Proxy Password: <input ref={proxyPwdRef} /></p>
-                <p>use Only LAN: <input type="checkbox" checked={hostOnly} onChange={() => setHostOnly(!hostOnly)} /></p>
-                <p>Password: <input ref={pwdRef} defaultValue={"impromptu"} /></p>
-                <button ref={ c => {
+            <div className="menu text-xl font-medium w-full" id="signalingInfo">
+                <p>ProxyID: <input className="input input-bordered input-success input-sm w-full max-w-xs text-xl" ref={proxyIdRef} /></p>
+                <p>Proxy Password: <input className="input input-bordered input-success input-sm w-full max-w-xs text-xl" ref={proxyPwdRef} /></p>
+                <p>Password: <input className="input input-bordered input-success input-sm w-full max-w-xs text-xl" ref={pwdRef} defaultValue={"impromptu"} /></p>
+                <p>use Only LAN: <input type="checkbox" className="checkbox checkbox-primary" checked={hostOnly} onChange={() => setHostOnly(!hostOnly)} /></p>
+                </div>
+                <button className="btn btn-outline text-base btn-primary" ref={ c => {
                     if(c){
                         c.onclick = () => {
                             if(pwdRef.current?.value){
@@ -50,7 +52,6 @@ const RootDiv = () => {
                         }
                     }
                 }}>connect</button>
-            </div>
             <div>
                 {isConnected && <DesktopOption />}
             </div>
@@ -62,11 +63,13 @@ const DesktopOption = () => {
     const [lock, setLock] = useState<boolean>(false);
 
     return (
-        <>
-            <p>Desktop ID: {impromptu.desktopId} <button onClick={() => {if(impromptu.desktopId){navigator.clipboard.writeText(impromptu.desktopId)}}}>copy</button></p>
+        <div className="text-base">
+            <p>Desktop ID: {impromptu.desktopId} <button className="btn btn-xs btn-outline btn-info" onClick={() => {if(impromptu.desktopId){navigator.clipboard.writeText(impromptu.desktopId)}}}>copy</button></p>
+            <div className="divider divider-primary"></div>
             <FileShare />
+            <div className="divider divider-info"></div>
             <HostScreen setLock={setLock} />
-        </>
+        </div>
     )
 }
 
