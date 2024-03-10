@@ -2,7 +2,7 @@ import { Socket, io } from "socket.io-client";
 import { listenAuth, reqAutoProxy } from "./signaling";
 import { ShareHostApp } from "./shareApp/host";
 import { ShareFile } from "./shareFile";
-import { signalingAddress, socketOption } from "../config";
+import { config } from "../config";
 
 const setAuth = (desktopId: string, socket: Socket, password: string): void => {
   listenAuth(socket, desktopId, password);
@@ -66,14 +66,10 @@ const initShareFile = (
 
 export class Impromptu {
   public desktopId?: string;
-  private socket: Socket;
+  private socket?: Socket;
   private rtcConfiguration?: RTCConfiguration;
   private shareHostApp?: ShareHostApp;
   private shareFile?: ShareFile;
-
-  constructor() {
-    this.socket = io(signalingAddress, socketOption);
-  }
 
   public listenDesktopId(
     callBack: () => void,
@@ -81,11 +77,16 @@ export class Impromptu {
     hostOnly: boolean,
     proxy?: { id: string; pwd: string },
   ) {
+    this.socket = io(config.getServerAddress(), config.getSocketOption());
     this.socket.connect();
     this.socket.once(
       "desktopId",
       async (desktopId?: string, rtcConfiguration?: RTCConfiguration) => {
-        if (typeof desktopId === "string" && rtcConfiguration) {
+        if (
+          this.socket?.connected &&
+          typeof desktopId === "string" &&
+          rtcConfiguration
+        ) {
           setAuth(desktopId, this.socket, password);
           this.rtcConfiguration = hostOnly ? {} : rtcConfiguration;
           this.desktopId = desktopId;
@@ -112,7 +113,7 @@ export class Impromptu {
     parent?: HTMLDivElement,
   ): Promise<boolean> {
     if (
-      this.socket.connected &&
+      this.socket?.connected &&
       this.desktopId &&
       this.rtcConfiguration &&
       !this.shareHostApp
@@ -165,7 +166,7 @@ export class Impromptu {
   ): Promise<boolean> {
     if (
       dirPath != "" &&
-      this.socket.connected &&
+      this.socket?.connected &&
       this.desktopId &&
       this.rtcConfiguration &&
       !this.shareFile
